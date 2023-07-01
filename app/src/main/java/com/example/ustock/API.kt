@@ -11,6 +11,7 @@ import java.io.*
 
 class API {
     val server = "https://enigmatic-plateau-21257.herokuapp.com"
+    val json = Json { ignoreUnknownKeys = true }
     private fun makeRequest(method: String, endpoint: String, body: String? = null): String {
         val url = URL("$server$endpoint")
         with(url.openConnection() as HttpURLConnection) {
@@ -44,8 +45,10 @@ class API {
 
         val result = makePostRequest(endpoint, body)
 
-        return Json.decodeFromString<List<Post>>(result)
+        return json.decodeFromString<List<Post>>(result)
     }
+
+
 
     suspend fun sendPost(post: Post): Boolean {
         //todo: change the endpoints

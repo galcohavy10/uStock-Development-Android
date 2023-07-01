@@ -13,6 +13,7 @@ class MainActivity : ComponentActivity() {
 
     //delete eventually
     private lateinit var postShortcut: Button
+    private lateinit var journeyShortcut: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,7 +42,11 @@ class MainActivity : ComponentActivity() {
             startActivity(intent)
         }
 
-
+        journeyShortcut = findViewById(R.id.journeyPost)
+        journeyShortcut.setOnClickListener {
+            val intent = Intent(this, JourneyViewViewModel::class.java)
+            startActivity(intent)
+        }
 
     }
 }

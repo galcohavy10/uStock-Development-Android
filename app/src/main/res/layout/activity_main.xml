@@ -59,5 +59,16 @@
         android:backgroundTint="@android:color/background_light"
         android:background="?android:attr/selectableItemBackground"/>
 
+    <Button
+        android:id="@+id/journeyPost"
+        android:layout_width="200dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_height="wrap_content"
+        android:textColor="@color/login"
+        android:textSize="15sp"
+        android:text="Go to JourneyView"
+        android:backgroundTint="@android:color/background_light"
+        android:background="?android:attr/selectableItemBackground"/>
+
 
 </LinearLayout>
