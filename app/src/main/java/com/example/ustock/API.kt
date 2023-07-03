@@ -6,12 +6,22 @@ import kotlinx.serialization.json.*
 import java.net.HttpURLConnection
 import java.net.URL
 import java.io.*
-
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
 
 
 class API {
-    val server = "https://enigmatic-plateau-21257.herokuapp.com"
-    val json = Json { ignoreUnknownKeys = true }
+    private val client = OkHttpClient()
+    private val server = "https://enigmatic-plateau-21257.herokuapp.com"
+    private val json = Json { ignoreUnknownKeys = true }
+
     private fun makeRequest(method: String, endpoint: String, body: String? = null): String {
         val url = URL("$server$endpoint")
         with(url.openConnection() as HttpURLConnection) {
@@ -38,16 +48,29 @@ class API {
         makeRequest("POST", endpoint, body)
     }
 
+
     suspend fun getMyPosts(userID: String): List<Post> {
-        //TODO: Change the endpoints
         val endpoint = "/api/getMyPosts"
-        val body = Json.encodeToString(mapOf("userID" to userID))
+        val body = mapOf("userID" to userID)
 
-        val result = makePostRequest(endpoint, body)
+        val requestBody = JSONObject(body).toString()
+            .toRequestBody("application/json".toMediaType())
 
-        return json.decodeFromString<List<Post>>(result)
+        val request = Request.Builder()
+            .url(server + endpoint)
+            .post(requestBody)
+            .build()
+
+        val response = withContext(Dispatchers.IO) {
+            client.newCall(request).execute()
+        }
+
+        if (!response.isSuccessful) throw Exception("Server Error: ${response.code}")
+
+        val postsJson = response.body?.string() ?: throw Exception("Invalid response")
+
+        return json.decodeFromString(postsJson)
     }
-
 
 
     suspend fun sendPost(post: Post): Boolean {

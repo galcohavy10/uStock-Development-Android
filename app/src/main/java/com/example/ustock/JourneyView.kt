@@ -79,38 +79,6 @@ class JourneyViewViewModel: ComponentActivity() {
         }
     }
 
-//    fun JourneyView(userID: String) {
-//        val viewModel = remember { JourneyViewViewModel() }
-//
-//        LaunchedEffect(key1 = userID) {
-//            viewModel.fetchPosts(userID)
-//        }
-//
-//        val posts by viewModel.posts
-//
-//        if (posts.isNotEmpty()) {
-//            LazyColumn(
-//                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
-//            ) {
-//                items(posts.reversed()) { post ->
-//                    PostView(post = post) // You need to build this Composable separately
-//                }
-//            }
-//        } else {
-//            Column(modifier = Modifier.padding(8.dp)) {
-//                Text(
-//                    text = "No Posts Yet",
-//                    fontSize = 20.sp,
-//                    fontWeight = FontWeight.Bold
-//                )
-//                Text(
-//                    text = "Get Started!!!!",
-//                    fontSize = 16.sp,
-//                    color = Color.Gray
-//                )
-//            }
-//        }
-//    }
 
 }
 
