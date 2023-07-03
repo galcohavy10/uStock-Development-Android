@@ -1,91 +1,58 @@
 package com.example.ustock
 
-import kotlinx.coroutines.*
-import kotlinx.serialization.*
-import kotlinx.serialization.json.*
-import java.net.HttpURLConnection
-import java.net.URL
-import java.io.*
+import kotlinx.serialization.json.Json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
+import kotlinx.serialization.builtins.ListSerializer
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import org.json.JSONObject
 
+//This is a public constant to use in later APIs. All APIs use same server URL
+object Constants {
+    const val SERVER_URL = "https://enigmatic-plateau-21257.herokuapp.com"
+}
 
 class API {
-    private val client = OkHttpClient()
-    private val server = "https://enigmatic-plateau-21257.herokuapp.com"
+
+    private val client = OkHttpClient() //reduced complexity to all use this client.
     private val json = Json { ignoreUnknownKeys = true }
 
-    private fun makeRequest(method: String, endpoint: String, body: String? = null): String {
-        val url = URL("$server$endpoint")
-        with(url.openConnection() as HttpURLConnection) {
-            requestMethod = method
-            setRequestProperty("Content-Type", "application/json")
-            setRequestProperty("Accept", "application/json")
-
-            if (body != null) {
-                doOutput = true
-                val outputWriter = OutputStreamWriter(outputStream)
-                outputWriter.write(body)
-                outputWriter.flush()
-            }
-
-            return inputStream.bufferedReader().readText()
-        }
+    private fun createPostRequest(endpoint: String, body: String): Request {
+        val url = "${Constants.SERVER_URL}$endpoint"
+        val requestBody = body.toRequestBody("application/json".toMediaType())
+        return Request.Builder().url(url).post(requestBody).build()
     }
 
-    private suspend fun makeGetRequest(endpoint: String) = withContext(Dispatchers.IO) {
-        makeRequest("GET", endpoint)
-    }
-
-    private suspend fun makePostRequest(endpoint: String, body: String) = withContext(Dispatchers.IO) {
-        makeRequest("POST", endpoint, body)
-    }
-
-
-    suspend fun getMyPosts(userID: String): List<Post> {
-        val endpoint = "/api/getMyPosts"
-        val body = mapOf("userID" to userID)
-
-        val requestBody = JSONObject(body).toString()
-            .toRequestBody("application/json".toMediaType())
-
-        val request = Request.Builder()
-            .url(server + endpoint)
-            .post(requestBody)
-            .build()
-
-        val response = withContext(Dispatchers.IO) {
-            client.newCall(request).execute()
-        }
-
+    //Suspend keyword used to make this action non-blocking.
+    //The main thread may be occupied with a user action and this is helpful async code.
+    private suspend fun makeRequest(request: Request): String = withContext(Dispatchers.IO) {
+        val response = client.newCall(request).execute()
         if (!response.isSuccessful) throw Exception("Server Error: ${response.code}")
-
-        val postsJson = response.body?.string() ?: throw Exception("Invalid response")
-
-        return json.decodeFromString(postsJson)
+        response.body?.string() ?: throw Exception("Invalid response")
     }
 
+    //no use of private here is a good choice, many apis will call this on profiles.
+    suspend fun getMyPosts(userID: String): List<Post> {
+        val body = json.encodeToString(mapOf("userID" to userID))
+        val request = createPostRequest("/api/getMyPosts", body)
+        val postsJson = makeRequest(request)
+        return json.decodeFromString(ListSerializer(Post.serializer()), postsJson)
+    }
 
+    //boilerplate, wouldn't work in practice but good job
     suspend fun sendPost(post: Post): Boolean {
-        //todo: change the endpoints
-        val endpoint = "/api/sendPost"
-        val body = Json.encodeToString(post) // Convert the Post object to a JSON string
-
+        val body = json.encodeToString(post)
+        val request = createPostRequest("/api/sendPost", body)
         return try {
-            makePostRequest(endpoint, body)
+            makeRequest(request)
             true
         } catch (e: Exception) {
             println("Error sending post: ${e.localizedMessage}")
             false
         }
     }
-
-
 }
