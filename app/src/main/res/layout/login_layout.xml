@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    tools:context=".CreateAccountActivity">
+
+    <Button
+        android:id="@+id/button"
+        android:layout_width="60sp"
+        android:layout_height="50sp"
+        android:minHeight="48dp"
+        android:textSize="40sp"
+        android:backgroundTint="@android:color/background_light"
+        android:background="?android:attr/selectableItemBackground"
+        android:text="&lt;" />
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="match_parent"
+        android:layout_gravity="center_horizontal"
+        android:layout_height="wrap_content"
+        android:textAlignment="center"
+        android:textSize="40sp"
+        android:layout_marginBottom="20sp"
+        android:text="Welcome Back!" />
+
+    <EditText
+        android:id="@+id/editTextUsername"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10sp"
+        android:textSize="20sp"
+        android:minHeight="48dp"
+        android:background="@drawable/white_text_field"
+        android:hint="Username" />
+
+    <EditText
+        android:id="@+id/editTextPassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10sp"
+        android:textSize="20sp"
+        android:minHeight="48dp"
+        android:background="@drawable/white_text_field"
+        android:hint="Password"
+        android:inputType="textPassword" />
+
+    <Button
+        android:id="@+id/buttonLogin"
+        android:layout_width="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_height="wrap_content"
+        android:background="@drawable/green_button"
+        android:textColor="@color/white"
+        android:layout_marginTop="30sp"
+        android:text="Login" />
+
+</LinearLayout>
