@@ -1,3 +1,5 @@
+//This will allow the login button to actually login
+
 ## Use existing users only at this point.
 
 ```    func logInUser(username: String, password: String, completion: @escaping (Bool) -> Void) {
