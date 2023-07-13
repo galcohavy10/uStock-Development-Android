@@ -5,7 +5,7 @@ public class Post: Codable, Identifiable {
     var caption: String
     var media: Media
     var user: String
-    var rating: Int
+    var rating: Int //added to provide number from 1-100 that evaluates user's progress
     var aspects: [String]?
     var upvotes: [String]?
     var downvotes: [String]?
@@ -61,6 +61,7 @@ public class Media: Codable {
     var investedAspects: [String]?
     var stock: String?
     var competitions: [String]?
+    var blockedUsers: [String]? //added to appease apple's mandatory blocking users feature
     
     enum CodingKeys: String, CodingKey {
         case id = "_id"
@@ -79,4 +80,5 @@ public class Media: Codable {
         case investedAspects
         case stock
         case competitions
+        case blockedUsers
     }```
