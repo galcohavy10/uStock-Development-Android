@@ -1,6 +1,9 @@
 package com.example.ustock
 
 import android.graphics.Bitmap
+import android.media.AudioManager
+import android.media.MediaPlayer
+import android.media.browse.MediaBrowser
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,28 +23,52 @@ import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowCircleDown
 import androidx.compose.material.icons.filled.ArrowCircleUp
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import java.net.URL
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.fillMaxWidth
+import kotlinx.coroutines.withContext
+import android.net.Uri
+import android.widget.Toast
+import androidx.compose.foundation.background
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.MediaItem
+import com.google.android.exoplayer2.ui.StyledPlayerView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.net.URL
+import org.w3c.dom.Comment
+
 
 //Compile all the individual Postitems into a scrollable list
 @Composable
 fun PostView(posts: List<Post>) {
-    LazyColumn {
+    LazyColumn(
+        modifier = Modifier.background(Color.LightGray) // Adds a light gray background
+    ) {
         items(posts) { post ->
-            PostItem(post = post)
+            PostItem(
+                post = post,
+                modifier = Modifier.padding(vertical = 8.dp) // Adds vertical padding to create space between items
+            )
         }
     }
 }
 
+
 //View one post
 @Composable
-fun PostItem(post: Post) {
+fun PostItem(post: Post, modifier: Modifier = Modifier) {
     Card(modifier = Modifier.padding(8.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
             val isUpvoted = remember { mutableStateOf(false) }
@@ -50,67 +77,157 @@ fun PostItem(post: Post) {
             Text(text = "ID: ${post.id}")
             Text(text = "Caption: ${post.caption}")
             val context = LocalContext.current
-
-            val mediaUrl = post.media.url ?: null
-            var postImage: Bitmap? = null
-            var postVideoURL: String? = null
-            var postAudioURL: String? = null
+            var postAudioURL: URL? = null
             var api = API()
-
+            Text(text = "Media Type: ${post.media.type ?: "No tags"}")
+            Text(text = "Media url: ${post.media.url ?: "No tags"}")
             when (post.media.type) {
                 "image" -> {
-                    if (postImage == null) {
-                        //imageLoading = true
+                    val postImage = remember { mutableStateOf<Bitmap?>(null) } // Declare postImage as State<Bitmap?>
+
+                    LaunchedEffect(key1 = post.id) {
+                        api.fetchImageData(post.id) { result ->
+                            if (result.isSuccess) {
+                                val image = result.getOrNull()
+                                postImage.value = image // update the mutable state with the fetched image
+                            } else if (result.isFailure) {
+                                println("Failed to fetch image data: ${result.exceptionOrNull()}")
+                            }
+                        }
+                    }
+                    postImage.value?.let {
+                        val imageBitmap = remember { it.asImageBitmap() } // Convert Bitmap to ImageBitmap
+                        Image(bitmap = imageBitmap, contentDescription = "Post image")
+                    }
+                }
+
+            /*"video" -> {
+                    val context = LocalContext.current
+
+                    val exoPlayer = remember {
+                        ExoPlayer.Builder(context).build().apply {
+                            val mediaItem = MediaItem.fromUri(url) // put here your hardcoded URL
+                            setMediaItem(mediaItem)
+                            prepare()
+                            playWhenReady = true
+                        }
+                    }
+
+                    AndroidView({ StyledPlayerView(it).apply { player = exoPlayer } })
+
+                    DisposableEffect(Unit) {
+                        onDispose {
+                            exoPlayer.release()
+                        }
+                    }
+                }*/
+
+                "video" -> {
+                    val context = LocalContext.current
+                    val postVideoURL = remember { mutableStateOf<URL?>(null) }
+                    val exoPlayer = remember {
+                        ExoPlayer.Builder(context).build()
+                    }
+
+                    LaunchedEffect(key1 = post.id) {
                         CoroutineScope(Dispatchers.IO).launch {
-                            val result = api.fetchImageData(post.id)
-                            withContext(Dispatchers.Main) {
-                                //imageLoading = false
-                                if (result.isSuccess) {
-                                    val image = result.getOrNull()
-                                    postImage = image
-                                } else if (result.isFailure) {
-                                    println("Failed to fetch image data: ${result.exceptionOrNull()}")
+                            api.fetchVideoURL(post.id).let { result ->
+                                withContext(Dispatchers.Main) {
+                                    if (result.isSuccess) {
+                                        postVideoURL.value = result.getOrNull()
+
+                                        // Prepare the ExoPlayer with the source
+                                        val mediaItem = MediaItem.fromUri(postVideoURL.value.toString())
+                                        exoPlayer.setMediaItem(mediaItem)
+                                        exoPlayer.prepare()
+
+                                        // Play the video
+                                        exoPlayer.playWhenReady = true
+                                    } else if (result.isFailure) {
+                                        println("Failed to fetch video URL: ${result.exceptionOrNull()}")
+                                    }
                                 }
                             }
                         }
                     }
-                }
 
-                "video" -> {
-                    if (postVideoURL == null) {
-                        //videoLoading = true
-                        CoroutineScope(Dispatchers.IO).launch {
-                            val result = api.fetchVideoURL(post.id)
-                            withContext(Dispatchers.Main) {
-                                //videoLoading = false
-                                if (result.isSuccess) {
-                                    val url = result.getOrNull()
-                                    postVideoURL = url
-                                } else if (result.isFailure) {
-                                    println("Failed to fetch video URL: ${result.exceptionOrNull()}")
-                                }
+                    AndroidView(
+                        factory = { StyledPlayerView(it).apply { player = exoPlayer } },
+                        update = { view -> view.player = exoPlayer }
+                    )
 
-                            }
+                    DisposableEffect(Unit) {
+                        onDispose {
+                            exoPlayer.release()
                         }
                     }
                 }
 
                 "audio" -> {
-                    if (postAudioURL == null) {
-                        //audioLoading = true
-                        CoroutineScope(Dispatchers.IO).launch {
-                            val result = api.fetchAudioURL(post.id)
-                            withContext(Dispatchers.Main) {
-                                //audioLoading = false
-                                if (result.isSuccess) {
-                                    val url = result.getOrNull()
-                                    postAudioURL = url
-                                } else if (result.isFailure) {
-                                    println("Failed to fetch audio URL: ${result.exceptionOrNull()}")
-                                }
+                    val ctx = LocalContext.current
+                    val mediaPlayer = MediaPlayer()
+                    Text(
+                        modifier = Modifier.padding(6.dp),
+                        text = "Play Audio from URL",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Button(
+                        modifier = Modifier
+                            .width(300.dp)
+                            .padding(7.dp),
+                        onClick = {
+                            var audioUrl = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+                            mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC)
+                            try {
+                                mediaPlayer.setDataSource(audioUrl)
+                                mediaPlayer.prepare()
+                                mediaPlayer.start()
+
+                            } catch (e: Exception) {
+                                e.printStackTrace()
                             }
-                        }
+                            Toast.makeText(ctx, "Audio started playing..", Toast.LENGTH_SHORT).show()
+
+                        }) {
+                        Text(text = "Play Audio")
                     }
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Button(
+                        modifier = Modifier
+                            .width(300.dp)
+                            .padding(7.dp),
+                        onClick = {
+                            if (mediaPlayer.isPlaying) {
+                                mediaPlayer.stop()
+                                mediaPlayer.reset()
+                                mediaPlayer.release()
+                                Toast.makeText(ctx, "Audio has been  paused..", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(ctx, "Audio not played..", Toast.LENGTH_SHORT).show()
+                            }
+
+
+                        }) {
+                        // on below line we are specifying text for button.
+                        Text(text = "Pause Audio")
+                    }
+
+//                    if (postAudioURL == null) {
+//                        LaunchedEffect(key1 = post.id) {
+//                            api.fetchAudioURL(post.id) { result ->
+//                                if (result.isSuccess) {
+//                                    val url = result.getOrNull()
+//                                    postAudioURL = url
+//                                } else if (result.isFailure) {
+//                                    println("Failed to fetch audio URL: ${result.exceptionOrNull()}")
+//                                }
+//                            }
+//                        }
+//                    }
                 }
 
                 "text" -> Text(text = post.media.content ?: "No content")
@@ -148,12 +265,24 @@ fun PostItem(post: Post) {
                     }
                 }
 
+//                var showComments by remember { mutableStateOf(false) }
+//
+//                if (showComments) {
+//                    CommentsScreen(post.comments ?: emptyList())
+//                } else {
+//                    // ...Your post code here...
+//
+//                    Button(
+//                        onClick = { showComments = true }
+//                    ) {
+//                        Text(text = "Comments: ${post.comments?.size ?: "0"}")
+//                    }
+//                }
                 Button(
-                    onClick = { /*TODO: handle click event*/ },
-                    modifier = Modifier.size(50.dp)
-                ) {
-                    Text(text = "Comments: ${post.comments?.size ?: "0"}")
-                }
+                        onClick = {  }
+                    ) {
+                        Text(text = "Comments: ${post.comments?.size ?: "0"}")
+                    }
             }
             Text(text = "Created at: ${post.createdAt}")
 
@@ -163,6 +292,15 @@ fun PostItem(post: Post) {
         }
     }
 }
+
+//@Composable
+//fun CommentsScreen(comments: List<Comment>) {
+//    LazyColumn {
+//        items(comments) { comment ->
+//            Text(text = comment.text)  // Assuming Comment has a 'text' property
+//        }
+//    }
+//}
 
 //Easy debug function
 //However does not work now since it is unable to parse Glide. TBH, idk if glide is working

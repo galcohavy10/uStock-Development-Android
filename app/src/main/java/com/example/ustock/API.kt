@@ -20,10 +20,15 @@ import okhttp3.*
 import android.graphics.BitmapFactory
 import android.graphics.Bitmap
 import android.util.Base64
+import com.example.ustock.Constants.server
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import java.net.MalformedURLException
 
 //This is a public constant to use in later APIs. All APIs use same server URL
+//For James: When pushing to the github, first fetch then use git push origin master
 object Constants {
-    const val SERVER_URL = "https://enigmatic-plateau-21257.herokuapp.com"
+    const val server = "https://enigmatic-plateau-21257.herokuapp.com"
 }
 
 class API {
@@ -31,45 +36,20 @@ class API {
     private val client = OkHttpClient() //reduced complexity to all use this client.
     private val json = Json { ignoreUnknownKeys = true }
 
-    private suspend fun makeRequest(method: String, endpoint: String, body: String? = null): String = withContext(Dispatchers.IO) {
-        val url = URL("$server$endpoint")
-        with(url.openConnection() as HttpURLConnection) {
-            requestMethod = method
-            setRequestProperty("Content-Type", "application/json")
-            setRequestProperty("Accept", "application/json")
-
-            if (body != null) {
-                doOutput = true
-                val outputWriter = OutputStreamWriter(outputStream)
-                outputWriter.write(body)
-                outputWriter.flush()
-            }
-
-            inputStream.bufferedReader().readText()
-        }
+    private fun createPostRequest(endpoint: String, body: String): Request {
+        val url = "$server$endpoint"
+        val requestBody = body.toRequestBody("application/json".toMediaType())
+        return Request.Builder().url(url).post(requestBody).build()
     }
 
-    suspend fun getMyPosts(userID: String): List<Post> {
-        val endpoint = "/api/getMyPosts"
-        val body = mapOf("userID" to userID)
-
-        val requestBody = JSONObject(body).toString()
-            .toRequestBody("application/json".toMediaType())
-
-        val request = Request.Builder()
-            .url(server + endpoint)
-            .post(requestBody)
-            .build()
-
-        val response = withContext(Dispatchers.IO) {
-            client.newCall(request).execute()
-        }
-
+    //Suspend keyword used to make this action non-blocking.
+    //The main thread may be occupied with a user action and this is helpful async code.
+    private suspend fun makeRequest(request: Request): String = withContext(Dispatchers.IO) {
+        val response = client.newCall(request).execute()
         if (!response.isSuccessful) throw Exception("Server Error: ${response.code}")
         response.body?.string() ?: throw Exception("Invalid response")
     }
 
-    //no use of private here is a good choice, many apis will call this on profiles.
     suspend fun getMyPosts(userID: String): List<Post> {
         val body = json.encodeToString(mapOf("userID" to userID))
         val request = createPostRequest("/api/getMyPosts", body)
@@ -77,12 +57,11 @@ class API {
         return json.decodeFromString(ListSerializer(Post.serializer()), postsJson)
     }
 
-    //boilerplate, wouldn't work in practice but good job
     suspend fun sendPost(post: Post): Boolean {
         val body = json.encodeToString(post)
         val request = createPostRequest("/api/sendPost", body)
         return try {
-            makeRequest("POST", endpoint, body)
+            makeRequest(request)
             true
         } catch (e: Exception) {
             println("Error sending post: ${e.localizedMessage}")
@@ -123,75 +102,123 @@ class API {
 
     //Fetch Media from API
     //get any image, this is getting the whole file. the response will look like base64 data.
-    // Required imports for OkHttp, JSONObject, Bitmap, and Base64
 
-    fun fetchImageData(postID: String): Result<Bitmap> {
+    suspend fun fetchImageData(postID: String, completion: (Result<Bitmap>) -> Unit) {
         val endpoint = "/api/fetchImageData"
-        val formBody = FormBody.Builder()
-            .add("postID", postID)
-            .build()
+
+        val parameters: Map<String, Any> = mapOf("postID" to postID)
+
+        val jsonObject = JSONObject()
+        for ((key, value) in parameters) {
+            jsonObject.put(key, value)
+        }
+        val requestBody = jsonObject.toString().toRequestBody("application/json".toMediaType())
 
         val request = Request.Builder()
-            .url(endpoint)
-            .post(formBody)
+            .url(server + endpoint)
+            .post(requestBody)
+            .header("Content-Type", "application/json")
+            .header("Accept", "application/json")
             .build()
 
-        client.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) throw IOException("Unexpected code $response")
+        CoroutineScope(Dispatchers.IO).launch {
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) {
+                    withContext(Dispatchers.Main) {
+                        completion(Result.failure(IOException("Unexpected code $response")))
+                    }
+                } else {
+                    val jsonResponse = JSONObject(response.body?.string())
+                    val base64Image = jsonResponse.optString("base64Image")
+                    val bytes = Base64.decode(base64Image, Base64.DEFAULT)
+                    val image = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
 
-            val jsonResponse = JSONObject(response.body?.string())
-            val base64Image = jsonResponse.optString("base64Image")
-
-            val bytes = Base64.decode(base64Image, Base64.DEFAULT)
-            val image = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-
-            completion(Result.success(image))
+                    withContext(Dispatchers.Main) {
+                        completion(Result.success(image))
+                    }
+                }
+            }
         }
     }
 
-    fun fetchVideoURL(postID: String):Result<URL> {
+
+    suspend fun fetchVideoURL(postID: String) : Result<URL> {
         val endpoint = "/api/fetchVideoAuthorizedURL"
-        val formBody = FormBody.Builder()
-            .add("postID", postID)
-            .build()
+        val parameters: Map<String, Any> = mapOf("postID" to postID)
+
+        val jsonObject = JSONObject()
+        for ((key, value) in parameters) {
+            jsonObject.put(key, value)
+        }
+        val requestBody = jsonObject.toString().toRequestBody("application/json".toMediaType())
 
         val request = Request.Builder()
-            .url(endpoint)
-            .post(formBody)
+            .url(server + endpoint)
+            .post(requestBody)
+            .header("Content-Type", "application/json")
+            .header("Accept", "application/json")
             .build()
 
-        client.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) throw IOException("Unexpected code $response")
-
-            val jsonResponse = JSONObject(response.body?.string())
-            val urlString = jsonResponse.optString("url")
-            val url = URL(urlString)
-
-            completion(Result.success(url))
+        return withContext(Dispatchers.IO) {
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) {
+                    Result.failure(IOException("Unexpected code $response"))
+                } else {
+                    val jsonResponse = JSONObject(response.body?.string())
+                    val urlString = jsonResponse.optString("url")
+                    try {
+                        val url = URL(urlString)
+                        Result.success(url)
+                    } catch (e: MalformedURLException) {
+                        Result.failure(e)
+                    }
+                }
+            }
         }
     }
 
-    fun fetchAudioURL(postID: String):Result<URL>  {
+
+
+    fun fetchAudioURL(postID: String, completion: (Result<URL>) -> Unit) {
         val endpoint = "/api/fetchAudioAuthorizedURL"
-        val formBody = FormBody.Builder()
-            .add("postID", postID)
-            .build()
+        val parameters: Map<String, Any> = mapOf("postID" to postID)
+
+        val jsonObject = JSONObject()
+        for ((key, value) in parameters) {
+            jsonObject.put(key, value)
+        }
+        val requestBody = jsonObject.toString().toRequestBody("application/json".toMediaType())
 
         val request = Request.Builder()
-            .url(endpoint)
-            .post(formBody)
+            .url(server + endpoint)
+            .post(requestBody)
+            .header("Content-Type", "application/json")
+            .header("Accept", "application/json")
             .build()
 
-        client.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) throw IOException("Unexpected code $response")
-
-            val jsonResponse = JSONObject(response.body?.string())
-            val urlString = jsonResponse.optString("url")
-            val url = URL(urlString)
-
-            completion(Result.success(url))
+        CoroutineScope(Dispatchers.IO).launch {
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) {
+                    withContext(Dispatchers.Main) {
+                        completion(Result.failure(IOException("Unexpected code $response")))
+                    }
+                } else {
+                    val jsonResponse = JSONObject(response.body?.string())
+                    val urlString = jsonResponse.optString("url")
+                    try {
+                        val url = URL(urlString)
+                        withContext(Dispatchers.Main) {
+                            completion(Result.success(url))
+                        }
+                    } catch (e: MalformedURLException) {
+                        withContext(Dispatchers.Main) {
+                            completion(Result.failure(e))
+                        }
+                    }
+                }
+            }
         }
     }
+
 
 }
-//Hello this is a git test
