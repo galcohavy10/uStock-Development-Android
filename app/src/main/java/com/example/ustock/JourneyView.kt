@@ -26,9 +26,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-//todo: Only have the get post working
-
+//Where the PostView is shows with a wrapper and possibly other functions
 class JourneyViewViewModel: ComponentActivity() {
+    //Generates display
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -40,7 +40,7 @@ class JourneyViewViewModel: ComponentActivity() {
 
     var api = API()
     var posts: MutableState<List<Post>> = mutableStateOf(emptyList())
-
+    //get posts from API
     fun fetchPosts(userID: String) {
         CoroutineScope(Dispatchers.IO).launch {
             val fetchedPosts = api.getMyPosts(userID)
@@ -50,6 +50,7 @@ class JourneyViewViewModel: ComponentActivity() {
         }
     }
 
+    //The actual way to view the post after fetching the post information
     @Composable
     //again, you may use marco's username here: "646d7100141bdacde51e66b6" to make this work
     fun JourneyView(userID: String) {
