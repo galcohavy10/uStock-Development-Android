@@ -1,12 +1,10 @@
 package com.example.ustock
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.runtime.*
-import androidx.compose.ui.text.input.KeyboardType
 import java.util.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
@@ -16,7 +14,10 @@ import kotlinx.coroutines.launch
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.compose.material.MaterialTheme
+import data_structures.Media
+import data_structures.Post
 
+//TODO: Incomplete
 class CreatePost : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,20 +52,8 @@ fun PostForm() {
         }
     }
 }
-//val id: String,
-//val caption: String,
-//val media: Media,
-//val user: String,
-//val aspects: List<String>?,
-//val upvotes: List<String>?,
-//val downvotes: List<String>?,
-//val createdAt: Date,
-//val updatedAt: Date?,
-//val comments: List<String>?,
-//val tags: List<String>?,
-//val mentions: List<String>?
 
-
+//TODO: Finish the send to post to server
 fun sendPostToServer(id: String, caption: String, mediaType: String, mediaContent: String, mediaUrl: String, user: String) {
     val post = Post(
         id = id,

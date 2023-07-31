@@ -3,7 +3,6 @@ package com.example.ustock
 import android.graphics.Bitmap
 import android.media.AudioManager
 import android.media.MediaPlayer
-import android.media.browse.MediaBrowser
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -32,22 +31,20 @@ import java.net.URL
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxWidth
 import kotlinx.coroutines.withContext
-import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.ui.StyledPlayerView
+import data_structures.Media
+import data_structures.Post
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.w3c.dom.Comment
 
 
 //Compile all the individual Postitems into a scrollable list
