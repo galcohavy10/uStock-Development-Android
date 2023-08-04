@@ -66,15 +66,10 @@ override fun onCreate(savedInstanceState: Bundle?) {
                         // handle error, the user needs to see what went wrong
                         Log.e("TAG", "Error: ${result.exceptionOrNull()?.localizedMessage}")
                         Toast.makeText(this@LoginActivity, "Error: Extensive error handling not created yet", Toast.LENGTH_SHORT).show()
-                        //val errorMessage = "Error: Extensive error handling not created yet"
-                        //alertMessage.value = errorMessage ?: "no error"
-                        //showingAlert.value = true
-                        //isLoading.value = false
                     }
                 }
             }
             Toast.makeText(this, "Logged in!", Toast.LENGTH_SHORT).show()
-//            finish()
             } else {
                 Toast.makeText(this, "Please enter username and password", Toast.LENGTH_SHORT).show()
             }

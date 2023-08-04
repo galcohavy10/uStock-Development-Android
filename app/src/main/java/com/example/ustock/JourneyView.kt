@@ -3,14 +3,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -22,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.getValue
+import data_structures.Post
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -33,13 +30,15 @@ class JourneyViewViewModel: ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MaterialTheme {
-                JourneyView("646d7100141bdacde51e66b6") // This is your Composable function
+                //Marco's ID: "646d7100141bdacde51e66b"
+                JourneyView("644c34dd4f8a7aa9fcceaff8") // This is your Composable function
             }
         }
     }
 
     var api = API()
     var posts: MutableState<List<Post>> = mutableStateOf(emptyList())
+
     //get posts from API
     fun fetchPosts(userID: String) {
         CoroutineScope(Dispatchers.IO).launch {
@@ -53,18 +52,21 @@ class JourneyViewViewModel: ComponentActivity() {
     //The actual way to view the post after fetching the post information
     @Composable
     //again, you may use marco's username here: "646d7100141bdacde51e66b6" to make this work
+    //James: "644c34dd4f8a7aa9fcceaff8"
     fun JourneyView(userID: String) {
         val viewModel = remember { JourneyViewViewModel() }
 
         LaunchedEffect(key1 = userID) {
-            viewModel.fetchPosts(userID)
+            viewModel.fetchPosts(userID) //Change this to hard coded when testing
         }
 
         val posts by viewModel.posts
 
         if (posts.isNotEmpty()) {
-            PostView(posts = posts.reversed()) // directly use PostView here
+            PostView(posts = posts.reversed()) //shows posts in order
         } else {
+            //In case posts have not been retrieved
+            //TODO: Maybe make a loading screen
             Column(modifier = Modifier.padding(8.dp)) {
                 Text(
                     text = "No Posts Yet",

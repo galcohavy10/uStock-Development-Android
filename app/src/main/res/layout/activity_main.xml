@@ -7,8 +7,7 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-
-
+<!--    TODO: Image is not being shown-->
     <ImageView
         android:id="@+id/imageView"
         android:layout_width="match_parent"

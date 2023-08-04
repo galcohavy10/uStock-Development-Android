@@ -1,26 +1,23 @@
 package com.example.ustock
 
 
-import kotlinx.serialization.*
-import java.net.HttpURLConnection
 import java.net.URL
 import java.io.*
 import kotlinx.serialization.json.Json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.builtins.ListSerializer
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
-import okhttp3.*
 import android.graphics.BitmapFactory
 import android.graphics.Bitmap
 import android.util.Base64
 import com.example.ustock.Constants.server
+import data_structures.Post
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.net.MalformedURLException
@@ -80,6 +77,7 @@ class API {
             .post(requestBody)
             .build()
 
+        //Error Handling
         return withContext(Dispatchers.IO) {
             try {
                 client.newCall(request).execute().use { response ->
@@ -102,12 +100,9 @@ class API {
 
     //Fetch Media from API
     //get any image, this is getting the whole file. the response will look like base64 data.
-
     suspend fun fetchImageData(postID: String, completion: (Result<Bitmap>) -> Unit) {
         val endpoint = "/api/fetchImageData"
-
         val parameters: Map<String, Any> = mapOf("postID" to postID)
-
         val jsonObject = JSONObject()
         for ((key, value) in parameters) {
             jsonObject.put(key, value)
@@ -121,6 +116,7 @@ class API {
             .header("Accept", "application/json")
             .build()
 
+        //Error Handling
         CoroutineScope(Dispatchers.IO).launch {
             client.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) {
@@ -141,7 +137,7 @@ class API {
         }
     }
 
-
+    //Get Video API
     suspend fun fetchVideoURL(postID: String) : Result<URL> {
         val endpoint = "/api/fetchVideoAuthorizedURL"
         val parameters: Map<String, Any> = mapOf("postID" to postID)
@@ -159,6 +155,7 @@ class API {
             .header("Accept", "application/json")
             .build()
 
+        //Error Handling
         return withContext(Dispatchers.IO) {
             client.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) {
@@ -178,7 +175,8 @@ class API {
     }
 
 
-
+    //Get Audio API
+    //May be deprecated
     fun fetchAudioURL(postID: String, completion: (Result<URL>) -> Unit) {
         val endpoint = "/api/fetchAudioAuthorizedURL"
         val parameters: Map<String, Any> = mapOf("postID" to postID)

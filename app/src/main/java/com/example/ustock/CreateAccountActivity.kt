@@ -41,6 +41,7 @@ class CreateAccountActivity : ComponentActivity() {
 
         dropdown = findViewById(R.id.dropdown_phone)
 
+        //Scroll down when content overflows
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, items)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         dropdown.adapter = adapter
@@ -62,6 +63,7 @@ class CreateAccountActivity : ComponentActivity() {
             }
         }
 
+        //Submit Button
         buttonCreateAccount.setOnClickListener {
             val first = firstName.text.toString()
             val last = lastName.text.toString()

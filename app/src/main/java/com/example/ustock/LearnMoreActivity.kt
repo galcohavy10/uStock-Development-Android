@@ -10,13 +10,10 @@ import androidx.activity.ComponentActivity
 
 class LearnMoreActivity : ComponentActivity() {
 
+    //Just references a bunch of text
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.login_layout)
-
-
-
-
     }
 
 }
