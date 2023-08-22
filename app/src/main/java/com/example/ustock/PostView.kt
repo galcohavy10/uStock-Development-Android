@@ -47,7 +47,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 
-//Compile all the individual Postitems into a scrollable list
+//Compile all the individual Post items into a scrollable list
 @Composable
 fun PostView(posts: List<Post>) {
     LazyColumn(
@@ -66,18 +66,36 @@ fun PostView(posts: List<Post>) {
 //View one post
 @Composable
 fun PostItem(post: Post, modifier: Modifier = Modifier) {
-    Card(modifier = Modifier.padding(8.dp)) {
+    Card(modifier = Modifier.padding(4.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
             val isUpvoted = remember { mutableStateOf(false) }
             val isDownvoted = remember { mutableStateOf(false) }
 
-            Text(text = "ID: ${post.id}")
-            Text(text = "Caption: ${post.caption}")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(text = "User: ") //${post.user}") we'd use this to get displayable info with separate api call
+                Spacer(modifier = Modifier.width(16.dp)) // Adjust spacing as needed
+                Text(text = "Aspects: ${post.aspects?.size ?: "No aspects"}")
+            }
+
+
+            Text(
+                text = "Caption: ${post.caption}",
+                style = TextStyle(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    background = Color.LightGray,
+                    color = Color.Black
+                )
+            )
+            Text(text = post.media.content ?: "No content")
             val context = LocalContext.current
             var postAudioURL: URL? = null
-            var api = API()
-            Text(text = "Media Type: ${post.media.type ?: "No tags"}")
-            Text(text = "Media url: ${post.media.url ?: "No tags"}")
+            val api = API()
+
+
             when (post.media.type) {
                 "image" -> {
                     val postImage = remember { mutableStateOf<Bitmap?>(null) } // Declare postImage as State<Bitmap?>
@@ -126,6 +144,10 @@ fun PostItem(post: Post, modifier: Modifier = Modifier) {
                         ExoPlayer.Builder(context).build()
                     }
 
+                    val displayMetrics = LocalContext.current.resources.displayMetrics
+                    val desiredWidth = displayMetrics.widthPixels // full width of the screen
+                    val desiredHeight = (displayMetrics.heightPixels * 0.7).toInt() // 70% of the screen's height
+
                     LaunchedEffect(key1 = post.id) {
                         CoroutineScope(Dispatchers.IO).launch {
                             api.fetchVideoURL(post.id).let { result ->
@@ -149,8 +171,28 @@ fun PostItem(post: Post, modifier: Modifier = Modifier) {
                     }
 
                     AndroidView(
-                        factory = { StyledPlayerView(it).apply { player = exoPlayer } },
-                        update = { view -> view.player = exoPlayer }
+                        factory = {
+                            StyledPlayerView(it).apply {
+                                player = exoPlayer
+                                videoSurfaceView?.let { surfaceView ->
+                                    if (surfaceView is SurfaceView) {
+                                        surfaceView.holder.setFixedSize(desiredWidth, desiredHeight)
+                                    } else if (surfaceView is TextureView) {
+                                        surfaceView.layoutParams = FrameLayout.LayoutParams(desiredWidth, desiredHeight)
+                                    }
+                                }
+                            }
+                        },
+                        update = { view ->
+                            view.player = exoPlayer
+                            view.videoSurfaceView?.let { surfaceView ->
+                                if (surfaceView is SurfaceView) {
+                                    surfaceView.holder.setFixedSize(desiredWidth, desiredHeight)
+                                } else if (surfaceView is TextureView) {
+                                    surfaceView.layoutParams = FrameLayout.LayoutParams(desiredWidth, desiredHeight)
+                                }
+                            }
+                        }
                     )
 
                     DisposableEffect(Unit) {
@@ -159,6 +201,7 @@ fun PostItem(post: Post, modifier: Modifier = Modifier) {
                         }
                     }
                 }
+
 
                 "audio" -> {
                     val ctx = LocalContext.current
@@ -177,7 +220,7 @@ fun PostItem(post: Post, modifier: Modifier = Modifier) {
                             .width(300.dp)
                             .padding(7.dp),
                         onClick = {
-                            var audioUrl = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+                            val audioUrl = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
                             mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC)
                             try {
                                 mediaPlayer.setDataSource(audioUrl)
@@ -227,14 +270,9 @@ fun PostItem(post: Post, modifier: Modifier = Modifier) {
 //                    }
                 }
 
-                "text" -> Text(text = post.media.content ?: "No content")
                 else -> Text("Unsupported media type: ${post.media.type}")
             }
 
-            //TODO Ask what user does
-            Text(text = "User: ${post.user}")
-            //TODO show the aspects as a list and probably need to decode it later
-            Text(text = "Number of Aspects: ${post.aspects?.size ?: "No aspects"}")
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -276,16 +314,21 @@ fun PostItem(post: Post, modifier: Modifier = Modifier) {
 //                    }
 //                }
                 Button(
-                        onClick = {  }
-                    ) {
-                        Text(text = "Comments: ${post.comments?.size ?: "0"}")
-                    }
+                        onClick = {  }, //will add comment view here
+                ) {
+                    Icon(Icons.Outlined.Comment, contentDescription = "Comments")
+                    Text(text = "${post.comments?.size ?: "0"}")
+                }
             }
-            Text(text = "Created at: ${post.createdAt}")
+
+    // Inside your PostItem function:
+            val targetFormat = SimpleDateFormat("MM/dd/yyyy", Locale.US)
+
+            val formattedDate = targetFormat.format(post.createdAt) // format the Date into simpler pattern.
+
+            Text(text = "Created $formattedDate")
 
 
-            Text(text = "Tags: ${post.tags?.joinToString() ?: "No tags"}")
-            Text(text = "Mentions: ${post.mentions?.joinToString() ?: "No mentions"}")
         }
     }
 }
@@ -294,7 +337,7 @@ fun PostItem(post: Post, modifier: Modifier = Modifier) {
 //fun CommentsScreen(comments: List<Comment>) {
 //    LazyColumn {
 //        items(comments) { comment ->
-//            Text(text = comment.text)  // Assuming Comment has a 'text' property
+//            Text(text = comment.content)  // Comment has a content property
 //        }
 //    }
 //}
