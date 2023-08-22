@@ -3,6 +3,9 @@ package com.example.ustock
 import android.graphics.Bitmap
 import android.media.AudioManager
 import android.media.MediaPlayer
+import android.view.SurfaceView
+import android.view.TextureView
+import android.widget.FrameLayout
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -33,7 +36,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import kotlinx.coroutines.withContext
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.material.icons.outlined.Comment
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -45,6 +50,8 @@ import data_structures.Post
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 
 //Compile all the individual Post items into a scrollable list
