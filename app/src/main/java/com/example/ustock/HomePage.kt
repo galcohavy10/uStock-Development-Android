@@ -45,13 +45,19 @@ fun HomePage() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Button(onClick = { /* Handle click for Button 1 */ }) {
-                Text("Button 1")
+                Text("Home")
             }
             Button(onClick = { /* Handle click for Button 2 */ }) {
-                Text("Button 2")
+                Text("Learn")
             }
             Button(onClick = { /* Handle click for Button 3 */ }) {
-                Text("Button 3")
+                Text("Create")
+            }
+            Button(onClick = { /* Handle click for Button 3 */ }) {
+                Text("Compete")
+            }
+            Button(onClick = { /* Handle click for Button 3 */ }) {
+                Text("Profile")
             }
         }
     }
