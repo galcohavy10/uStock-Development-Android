@@ -102,7 +102,7 @@ fun PostItem(post: Post, modifier: Modifier = Modifier) {
             var postAudioURL: URL? = null
             val api = API()
 
-
+            //Media types
             when (post.media.type) {
                 "image" -> {
                     val postImage = remember { mutableStateOf<Bitmap?>(null) } // Declare postImage as State<Bitmap?>
@@ -122,28 +122,6 @@ fun PostItem(post: Post, modifier: Modifier = Modifier) {
                         Image(bitmap = imageBitmap, contentDescription = "Post image")
                     }
                 }
-
-            /*"video" -> {
-                    val context = LocalContext.current
-
-                    val exoPlayer = remember {
-                        ExoPlayer.Builder(context).build().apply {
-                            val mediaItem = MediaItem.fromUri(url) // put here your hardcoded URL
-                            setMediaItem(mediaItem)
-                            prepare()
-                            playWhenReady = true
-                        }
-                    }
-
-                    AndroidView({ StyledPlayerView(it).apply { player = exoPlayer } })
-
-                    DisposableEffect(Unit) {
-                        onDispose {
-                            exoPlayer.release()
-                        }
-                    }
-                }*/
-
                 "video" -> {
                     val context = LocalContext.current
                     val postVideoURL = remember { mutableStateOf<URL?>(null) }
@@ -280,7 +258,6 @@ fun PostItem(post: Post, modifier: Modifier = Modifier) {
                 else -> Text("Unsupported media type: ${post.media.type}")
             }
 
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -307,19 +284,6 @@ fun PostItem(post: Post, modifier: Modifier = Modifier) {
                     }
                 }
 
-//                var showComments by remember { mutableStateOf(false) }
-//
-//                if (showComments) {
-//                    CommentsScreen(post.comments ?: emptyList())
-//                } else {
-//                    // ...Your post code here...
-//
-//                    Button(
-//                        onClick = { showComments = true }
-//                    ) {
-//                        Text(text = "Comments: ${post.comments?.size ?: "0"}")
-//                    }
-//                }
                 Button(
                         onClick = {  }, //will add comment view here
                 ) {
@@ -328,7 +292,7 @@ fun PostItem(post: Post, modifier: Modifier = Modifier) {
                 }
             }
 
-    // Inside your PostItem function:
+            // Inside your PostItem function:
             val targetFormat = SimpleDateFormat("MM/dd/yyyy", Locale.US)
 
             val formattedDate = targetFormat.format(post.createdAt) // format the Date into simpler pattern.

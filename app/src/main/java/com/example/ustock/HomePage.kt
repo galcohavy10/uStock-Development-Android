@@ -3,62 +3,82 @@ package com.example.ustock
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.BottomAppBar
 import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.material.FloatingActionButton
+import androidx.compose.material.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.material.Scaffold
 
 @Composable
-fun HomePage() {
-    // Create a scrollable content area
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+fun BottomBarWithButtons() {
+    BottomAppBar(
+        contentPadding = PaddingValues(),
+        elevation = 8.dp
     ) {
-        // Your scrollable content goes here
-        // ...
-
-        LineGraph(
-            data = listOf(100f, 75f, 20f, 50f, 70f, 60f, 80f),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp) // Adjust the height according to your needs
-        )
-
-
-
-
-
-        // Spacer to push the bottom bar to the bottom
-        Spacer(modifier = Modifier.weight(1f))
-
-        // Bottom bar with buttons
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp)
-                .height(56.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
+                .padding(8.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            Button(onClick = { /* Handle click for Button 1 */ }) {
-                Text("Home")
+            Button(onClick = { /* Handle Button 1 Click */ }) {
+                Text(text = "Button 1")
             }
-            Button(onClick = { /* Handle click for Button 2 */ }) {
-                Text("Learn")
+            Button(onClick = { /* Handle Button 2 Click */ }) {
+                Text(text = "Button 2")
             }
-            Button(onClick = { /* Handle click for Button 3 */ }) {
-                Text("Create")
+            // Add more buttons as needed
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun HomePage() {
+    Scaffold(
+        bottomBar = { BottomBarWithButtons() }
+    ) { contentPadding ->
+        // Create a scrollable content area
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(contentPadding)
+                .verticalScroll(rememberScrollState())
+        ) {
+            // Your scrollable content goes here
+            Text(text = "No Tasks Yet")
+
+            // FloatingActionButton
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+                    .height(56.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                FloatingActionButton(
+                    onClick = { /* Handle click for FAB */ },
+                    backgroundColor = Color.Green,
+                    contentColor = Color.White,
+                    modifier = Modifier
+                        .padding(16.dp)
+                ) {
+                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
+                }
             }
-            Button(onClick = { /* Handle click for Button 3 */ }) {
-                Text("Compete")
-            }
-            Button(onClick = { /* Handle click for Button 3 */ }) {
-                Text("Profile")
-            }
+
+            // Spacer to push the content up
+            Spacer(modifier = Modifier.weight(1f))
         }
     }
 }

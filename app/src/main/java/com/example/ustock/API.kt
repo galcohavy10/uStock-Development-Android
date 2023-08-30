@@ -18,9 +18,14 @@ import android.graphics.Bitmap
 import android.util.Base64
 import com.example.ustock.Constants.server
 import data_structures.Post
+import data_structures.wallet_model.Stock
+import data_structures.wallet_model.Wallet
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.serialization.serializer
 import java.net.MalformedURLException
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 //This is a public constant to use in later APIs. All APIs use same server URL
 //For James: When pushing to the github, first fetch then use git push origin master
@@ -47,6 +52,7 @@ class API {
         response.body?.string() ?: throw Exception("Invalid response")
     }
 
+    //The main getter function
     suspend fun getMyPosts(userID: String): List<Post> {
         val body = json.encodeToString(mapOf("userID" to userID))
         val request = createPostRequest("/api/getMyPosts", body)
@@ -217,6 +223,70 @@ class API {
             }
         }
     }
+
+
+    //Please note that this code assumes that you have a properly set up api class
+    // and DateDecoder for handling the post request and date decoding, respectively.
+    // The Result class used in this Kotlin code snippet must also be implemented according to your project's needs.
+    suspend fun getStock(walletID: String): Stock {
+        val endpoint = "/api/getStock"
+        val parameters: Map<String, Any> = mapOf("walletID" to walletID)
+
+        val jsonObject = JSONObject()
+        for ((key, value) in parameters) {
+            jsonObject.put(key, value)
+        }
+        val requestBody = jsonObject.toString().toRequestBody("application/json".toMediaType())
+
+        val request = Request.Builder()
+            .url(server + endpoint)
+            .post(requestBody)
+            .header("Content-Type", "application/json")
+            .header("Accept", "application/json")
+            .build()
+        val postsJson = makeRequest(request)
+        return json.decodeFromString(Stock.serializer(), postsJson)
+
+//        val jsonResponse = JSONObject(response.body?.string())
+//        val jsonDict = jsonResponse.getJSONObject("stock")
+//        val stockData = jsonDict.toString().toByteArray()
+//        val targetFormat = SimpleDateFormat("MM/dd/yyyy", Locale.US)
+//        val createdAt = targetFormat.parse(jsonDict.getString("createdAt"))
+
+    }
+
+    //To get wallet (and walletID) you can use the getWallet route. You should cache walletID on the devic
+    //This code assumes that you have a DateDecoder class defined and that the api
+    // object can make POST requests with the provided endpoint and body.
+    // Make sure that the Result class used in the Kotlin code is appropriate for your project.
+
+    suspend fun getWallet(userID: String): Wallet {
+        val endpoint = "/api/getWallet"
+        val parameters: Map<String, Any> = mapOf("userID" to userID)
+
+        val jsonObject = JSONObject()
+        for ((key, value) in parameters) {
+            jsonObject.put(key, value)
+        }
+        val requestBody = jsonObject.toString().toRequestBody("application/json".toMediaType())
+
+        val request = Request.Builder()
+            .url(server + endpoint)
+            .post(requestBody)
+            .header("Content-Type", "application/json")
+            .header("Accept", "application/json")
+            .build()
+
+        return withContext(Dispatchers.IO) {
+            val response = client.newCall(request).execute()
+            val jsonResponse = JSONObject(response.body?.string())
+            val jsonDict = jsonResponse.getJSONObject("wallet")
+            val walletData = jsonDict.toString()
+            Json.decodeFromString(Wallet.serializer(), walletData)
+        }
+    }
+
+
 
 
 }

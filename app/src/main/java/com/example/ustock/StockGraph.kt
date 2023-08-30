@@ -1,11 +1,9 @@
 package com.example.ustock
-
-
-
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
 import androidx.compose.material.Text
+import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,6 +21,23 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import data_structures.wallet_model.Stock
+import data_structures.wallet_model.StockDataPoint
+import okhttp3.Protocol.Companion.get
+import java.util.Calendar
+import java.util.Date
+
+val stock: Stock
+    get() {
+        TODO()
+        //GET API call to call for the stocks
+        //Print the values retrieved from the API so I know how to parse it
+
+
+
+    }
+var isCurrentUser: Boolean = false
+var timeRange: TimeRange = TimeRange.ONE_MONTH
 
 @Composable
 fun LineGraph(data: List<Float>, modifier: Modifier = Modifier) {
@@ -34,8 +49,8 @@ fun LineGraph(data: List<Float>, modifier: Modifier = Modifier) {
 
         if (data.isNotEmpty()) {
             val stepX = size.width / (data.size - 1)
-            val maxY = data.maxOrNull() ?: 1f
-            val minY = data.minOrNull() ?: 0f
+            val maxY:Float = data.maxOrNull() ?: 1f
+            val minY:Float = data.minOrNull() ?: 0f
             val valueRange = maxY - minY
 
             data.forEachIndexed { index, value ->
@@ -55,24 +70,64 @@ fun LineGraph(data: List<Float>, modifier: Modifier = Modifier) {
     }
 }
 
+
+
+enum class TimeRange(val value: String) {
+    FIVE_DAYS("5D"),
+    ONE_WEEK("1W"),
+    ONE_MONTH("1M"),
+    ONE_YEAR("1Y"),
+    ALL("ALL")
+}
+
+
+
+val paddingX: Float = 30f
+val paddingY: Float = 20f
+
+var isBouncing = false // animation
+var stockIsLoading = false
+var isCheckMark = false // Add this to track checkmark animation
+
+var isShowingTradeStockView = false
+
+fun getFilteredHistory(stock: Stock, timeRange: TimeRange): List<StockDataPoint> {
+    val now = Date()
+    val calendar = Calendar.getInstance()
+    val endDate: Date = when (timeRange) {
+        TimeRange.FIVE_DAYS -> calendar.apply { add(Calendar.DAY_OF_YEAR, -5) }.time
+        TimeRange.ONE_WEEK -> calendar.apply { add(Calendar.WEEK_OF_YEAR, -1) }.time
+        TimeRange.ONE_MONTH -> calendar.apply { add(Calendar.MONTH, -1) }.time
+        TimeRange.ONE_YEAR -> calendar.apply { add(Calendar.YEAR, -1) }.time
+        TimeRange.ALL -> calendar.apply { add(Calendar.YEAR, -100) }.time
+    }
+
+    val filtered = stock.history.filter { it.date >= endDate }
+
+    return if (filtered.isEmpty()) stock.history else filtered
+}
+
+
+//Create line graph with varying time lengths
+@Composable
+fun createLineGraph(timeRange: TimeRange){
+    var filteredHistory = getFilteredHistory(stock, timeRange)
+    val data = mutableListOf<Float>()
+    for (i in filteredHistory){
+        data.add(i.value.toFloat())
+    }
+    //Line graph
+    LineGraph(data = data, modifier = Modifier
+        .fillMaxWidth()
+        .height(200.dp)
+        .offset(x = -30.dp, y = 0.dp))
+}
+
+
 @Preview(showBackground = true)
-//@Composable
-//fun LineGraphPreview() {
-//    MaterialTheme {
-//        LineGraph(
-//            data = listOf(100f, 75f, 20f, 50f, 70f, 60f, 80f),
-//            modifier = Modifier
-//                .size(200.dp, 100.dp) // Set the specific width and height you desire
-//        )
-//
-//
-//    }
-//}
-
-
 @Composable
 fun StockGraphWithControls() {
-    var data by remember { mutableStateOf(listOf(100f, 75f, 20f, 50f, 70f, 60f, 80f)) }
+    //var data by remember { mutableStateOf(listOf(100, 75, 20, 50, 70, 60, 80)) }
 
     Column(
         modifier = Modifier.fillMaxSize()
@@ -92,8 +147,8 @@ fun StockGraphWithControls() {
                     .padding(2.dp)
                     .offset(x = 10.dp, y = 0.dp)
             )
-            //Line graph
-            LineGraph(data = data, modifier = Modifier.fillMaxWidth().height(200.dp).offset(x = -30.dp, y = 0.dp))
+
+            createLineGraph(timeRange)
         }
 
         // Buttons to manipulate the x-axis
@@ -103,22 +158,22 @@ fun StockGraphWithControls() {
                 .padding(2.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            Button(onClick = { data = data.map { 5f } }) { // Increase all values by 10
+            Button(onClick = { timeRange = TimeRange.FIVE_DAYS }) { // Increase all values by 10
                 Text("5D")
             }
-            Button(onClick = { data = data.map { 7f } }) { // Increase all values by 10
+            Button(onClick = { timeRange = TimeRange.ONE_WEEK }) { // Increase all values by 10
                 Text("1W")
             }
-            Button(onClick = { data = data.map { 30f } }) { // Increase all values by 10
+            Button(onClick = { timeRange = TimeRange.ONE_MONTH }) { // Increase all values by 10
                 Text("1M")
             }
-            Button(onClick = { data = data.map { 365f } }) { // Decrease all values by 10
+            Button(onClick = { timeRange = TimeRange.ONE_YEAR }) { // Decrease all values by 10
                 Text("1Y")
             }
-            //TODO:it should be the # of data points that is created
-            Button(onClick = { data = data.map { it } }) { // Decrease all values by 10
+            Button(onClick = {timeRange = TimeRange.ALL}) { // Decrease all values by 10
                 Text("ALL")
             }
+            createLineGraph(timeRange)
         }
     }
 }
