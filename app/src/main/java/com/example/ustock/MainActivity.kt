@@ -12,8 +12,9 @@ class MainActivity : ComponentActivity() {
     private lateinit var loginAccount: Button
 
     //delete eventually
-    private lateinit var postShortcut: Button
+    //private lateinit var postShortcut: Button
     private lateinit var journeyShortcut: Button
+    private lateinit var HomePageShortcut: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,9 +37,15 @@ class MainActivity : ComponentActivity() {
 
 
         //Delete Later
-        postShortcut = findViewById(R.id.createPost)
-        postShortcut.setOnClickListener {
-            val intent = Intent(this, CreatePost::class.java)
+//        postShortcut = findViewById(R.id.createPost)
+//        postShortcut.setOnClickListener {
+//            val intent = Intent(this, CreatePost::class.java)
+//            startActivity(intent)
+//        }
+
+        HomePageShortcut = findViewById(R.id.createHome)
+        HomePageShortcut.setOnClickListener{
+            val intent = Intent(this, HomePageViewModel::class.java)
             startActivity(intent)
         }
 

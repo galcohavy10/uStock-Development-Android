@@ -40,8 +40,6 @@ class JourneyViewViewModel: ComponentActivity() {
 
     var api = API()
     private var posts: MutableState<List<Post>> = mutableStateOf(emptyList())
-    private var wallet: MutableState<Wallet?> = mutableStateOf(null)
-    private var stock: MutableState<Stock?> = mutableStateOf(null)
     //get posts from API
     private fun fetchPosts(userID: String) {
         CoroutineScope(Dispatchers.IO).launch {
@@ -53,18 +51,6 @@ class JourneyViewViewModel: ComponentActivity() {
     }
 
 
-    //Get both the wallet and stocks
-    private fun fetchWallet(userID: String){
-        CoroutineScope(Dispatchers.IO).launch {
-            val fetchedWallet = api.getWallet(userID)
-            val fetchedStocks = api.getStock(fetchedWallet.id)
-            withContext(Dispatchers.Main) {
-                wallet.value = fetchedWallet
-                stock.value = fetchedStocks
-            }
-        }
-    }
-
     //The actual way to view the post after fetching the post information
     @Composable
     //again, you may use marco's username here: "646d7100141bdacde51e66b6" to make this work
@@ -74,19 +60,9 @@ class JourneyViewViewModel: ComponentActivity() {
 
         LaunchedEffect(key1 = userID) {
             viewModel.fetchPosts(userID) //Change this to hard coded when testing
-            viewModel.fetchWallet(userID)
         }
 
         val posts by viewModel.posts
-        val wallet by viewModel.wallet
-        val stock by viewModel.stock
-        //Graph
-        Text(text = "Wallet balance:${wallet?.balance}")
-        Text(text = "Wallet transactions:${wallet?.transactions}")
-        Text(text = "Stock wallet:${stock?.wallet}")
-        Text(text = "Stock History:${stock?.history}")
-        Text(text = "Stock symbol:${stock?.symbol}")
-
 
         if (posts.isNotEmpty()) {
             PostView(posts = posts.reversed()) //shows posts in order

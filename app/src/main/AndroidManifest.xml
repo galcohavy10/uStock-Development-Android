@@ -32,6 +32,7 @@
         <activity android:name=".LoginActivity"/>
         <activity android:name=".CreatePost"/>
         <activity android:name=".JourneyViewViewModel"/>
+        <activity android:name=".HomePageViewModel"/>
 
     </application>
 

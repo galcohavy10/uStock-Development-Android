@@ -27,15 +27,7 @@ import okhttp3.Protocol.Companion.get
 import java.util.Calendar
 import java.util.Date
 
-val stock: Stock
-    get() {
-        TODO()
-        //GET API call to call for the stocks
-        //Print the values retrieved from the API so I know how to parse it
 
-
-
-    }
 var isCurrentUser: Boolean = false
 var timeRange: TimeRange = TimeRange.ONE_MONTH
 
@@ -69,8 +61,6 @@ fun LineGraph(data: List<Float>, modifier: Modifier = Modifier) {
         drawPath(path = path, color = lineColor, style = strokeWidth)
     }
 }
-
-
 
 enum class TimeRange(val value: String) {
     FIVE_DAYS("5D"),
@@ -110,7 +100,7 @@ fun getFilteredHistory(stock: Stock, timeRange: TimeRange): List<StockDataPoint>
 
 //Create line graph with varying time lengths
 @Composable
-fun createLineGraph(timeRange: TimeRange){
+fun createLineGraph(stock: Stock,timeRange: TimeRange){
     var filteredHistory = getFilteredHistory(stock, timeRange)
     val data = mutableListOf<Float>()
     for (i in filteredHistory){
@@ -124,9 +114,10 @@ fun createLineGraph(timeRange: TimeRange){
 }
 
 
-@Preview(showBackground = true)
+//@Preview(showBackground = true)
+//TODO: Create an animation that will draw the graph live
 @Composable
-fun StockGraphWithControls() {
+fun StockGraphWithControls(stock: Stock?) {
     //var data by remember { mutableStateOf(listOf(100, 75, 20, 50, 70, 60, 80)) }
 
     Column(
@@ -148,7 +139,9 @@ fun StockGraphWithControls() {
                     .offset(x = 10.dp, y = 0.dp)
             )
 
-            createLineGraph(timeRange)
+            if (stock != null) {
+                createLineGraph(stock,timeRange)
+            }
         }
 
         // Buttons to manipulate the x-axis
@@ -173,7 +166,9 @@ fun StockGraphWithControls() {
             Button(onClick = {timeRange = TimeRange.ALL}) { // Decrease all values by 10
                 Text("ALL")
             }
-            createLineGraph(timeRange)
+//            if (stock != null) {
+//                createLineGraph(stock, timeRange)
+//            }
         }
     }
 }

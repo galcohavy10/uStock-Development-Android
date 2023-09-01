@@ -47,14 +47,25 @@
         android:backgroundTint="@android:color/background_light"
         android:background="?android:attr/selectableItemBackground"/>
 
+<!--    <Button-->
+<!--        android:id="@+id/createPost"-->
+<!--        android:layout_width="200dp"-->
+<!--        android:layout_gravity="center_horizontal"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:textColor="@color/login"-->
+<!--        android:textSize="15sp"-->
+<!--        android:text="Create Post"-->
+<!--        android:backgroundTint="@android:color/background_light"-->
+<!--        android:background="?android:attr/selectableItemBackground"/>-->
+
     <Button
-        android:id="@+id/createPost"
+        android:id="@+id/createHome"
         android:layout_width="200dp"
         android:layout_gravity="center_horizontal"
         android:layout_height="wrap_content"
         android:textColor="@color/login"
         android:textSize="15sp"
-        android:text="Create Post"
+        android:text="Create Homepage"
         android:backgroundTint="@android:color/background_light"
         android:background="?android:attr/selectableItemBackground"/>
 

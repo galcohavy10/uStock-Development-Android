@@ -229,6 +229,9 @@ class API {
     // and DateDecoder for handling the post request and date decoding, respectively.
     // The Result class used in this Kotlin code snippet must also be implemented according to your project's needs.
     suspend fun getStock(walletID: String): Stock {
+        val json = Json {
+            ignoreUnknownKeys = true  // This will ignore fields that are not present in your data class
+        }
         val endpoint = "/api/getStock"
         val parameters: Map<String, Any> = mapOf("walletID" to walletID)
 
@@ -244,8 +247,17 @@ class API {
             .header("Content-Type", "application/json")
             .header("Accept", "application/json")
             .build()
-        val postsJson = makeRequest(request)
-        return json.decodeFromString(Stock.serializer(), postsJson)
+//        val postsJson = makeRequest(request)
+//        return json.decodeFromString(Stock.serializer(), postsJson)
+
+        return withContext(Dispatchers.IO) {
+            val response = client.newCall(request).execute()
+            val jsonResponse = JSONObject(response.body?.string())
+            val jsonDict = jsonResponse.getJSONObject("stock")
+            val stockData = jsonDict.toString()
+            json.decodeFromString(Stock.serializer(), stockData)
+        }
+
 
 //        val jsonResponse = JSONObject(response.body?.string())
 //        val jsonDict = jsonResponse.getJSONObject("stock")
@@ -261,6 +273,9 @@ class API {
     // Make sure that the Result class used in the Kotlin code is appropriate for your project.
 
     suspend fun getWallet(userID: String): Wallet {
+        val json = Json {
+            ignoreUnknownKeys = true  // This will ignore fields that are not present in your data class
+        }
         val endpoint = "/api/getWallet"
         val parameters: Map<String, Any> = mapOf("userID" to userID)
 
@@ -276,13 +291,16 @@ class API {
             .header("Content-Type", "application/json")
             .header("Accept", "application/json")
             .build()
+//
+//        val postsJson = makeRequest(request)
+//        return json.decodeFromString(Wallet.serializer(), postsJson)
 
         return withContext(Dispatchers.IO) {
             val response = client.newCall(request).execute()
             val jsonResponse = JSONObject(response.body?.string())
             val jsonDict = jsonResponse.getJSONObject("wallet")
             val walletData = jsonDict.toString()
-            Json.decodeFromString(Wallet.serializer(), walletData)
+            json.decodeFromString(Wallet.serializer(), walletData)
         }
     }
 
