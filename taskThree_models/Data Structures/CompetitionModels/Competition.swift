@@ -25,6 +25,15 @@ public struct Competition: Codable, Identifiable {
 }
 
 
+public struct CompetitionProgressUpdate {
+    let competition: String
+    let team: String
+    let post: String? //in case this is an update with no post
+    let progress: Int? //in case this is an update with no progress
+    let date: Date
+}
+
+
 
 
 public struct CompetitionResponse: Codable { //for matching to node api response which gives {competition: Competition object response}.
