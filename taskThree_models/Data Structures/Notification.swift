@@ -7,6 +7,11 @@
 
 import Foundation
 
+public struct NotificationReference: Codable {
+    let id: String
+    let type: String
+}
+
 public struct Notification: Codable, Identifiable {
     public let id: String
     let recipient: String
@@ -14,9 +19,10 @@ public struct Notification: Codable, Identifiable {
     let message: String
     let read: Bool
     let createdAt: Date
+    let reference: NotificationReference?
 
     enum CodingKeys: String, CodingKey {
         case id = "_id"
-        case recipient, sender, message, read, createdAt
+        case recipient, sender, message, read, createdAt, reference 
     }
 }
